@@ -4,11 +4,38 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="61e44d1e-226b-4c4c-9863-df2ca22e937f" name="Changes" comment="" />
+    <list default="true" id="61e44d1e-226b-4c4c-9863-df2ca22e937f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/QuanLychothuexe.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/QuanLychothuexe.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PROGRESS.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/PROGRESS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/PUT_MYSQL_CONNECTOR_JAR_HERE.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/HopDong.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/HopDong.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/KetNoiCSDL.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/KetNoiCSDL.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/KhachHang.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/KhachHang.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/NhanVien.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/NhanVien.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/XeMay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/XeMay.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/quanlychothuexe.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/quanlychothuexe.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormChinh.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormChinh.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormDangNhap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormDangNhap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormHopDong.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormHopDong.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormKhachHang.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormKhachHang.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormThongKe.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormThongKe.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormXeMay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormXeMay.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
@@ -20,14 +47,23 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.KetNoiCSDL.executor": "Run",
+    "Application.Main.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/Java/QuanLychothuexe",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "preferences.pluginManager",
     "to.speed.mode.migration.done": "true"
   }

@@ -6,33 +6,33 @@
 
 ## 🗄️ Phần 1 — DATABASE (xem [`01-DATABASE.md`](01-DATABASE.md))
 
-- [ ] `src/database/quanlychothuexe.sql` — viết script `CREATE DATABASE` + 4 bảng
-- [ ] Insert dữ liệu mẫu (1 admin + 5 xe + 3 khách)
-- [ ] Chạy script trong MySQL Workbench / phpMyAdmin → không lỗi
-- [ ] `SELECT * FROM xemay;` → thấy 5 xe
+- [x] `src/database/quanlychothuexe.sql` — viết script `CREATE DATABASE` + 4 bảng
+- [x] Insert dữ liệu mẫu (1 admin + 5 xe + 3 khách)
+- [x] Chạy script trong MySQL Workbench / phpMyAdmin → không lỗi
+- [x] `SELECT * FROM xemay;` → thấy 5 xe
 
 ## ⚙️ Phần 2 — KẾT NỐI & CLASS DỮ LIỆU (xem [`03-LOGIC.md`](03-LOGIC.md))
 
 Tất cả file dưới đây có `package database;` ở đầu.
 
-- [ ] `src/database/KetNoiCSDL.java` — viết hàm `getConnection()`
-- [ ] Test kết nối in `"Kết nối thành công"`
-- [ ] `src/database/NhanVien.java` — class chứa dữ liệu
-- [ ] `src/database/KhachHang.java`
-- [ ] `src/database/XeMay.java`
-- [ ] `src/database/HopDong.java`
+- [x] `src/database/KetNoiCSDL.java` — viết hàm `getConnection()`
+- [x] Test kết nối in `"Kết nối thành công"`
+- [x] `src/database/NhanVien.java` — class chứa dữ liệu
+- [x] `src/database/KhachHang.java`
+- [x] `src/database/XeMay.java`
+- [x] `src/database/HopDong.java`
 
 ## 🖥️ Phần 3 — GIAO DIỆN (xem [`02-GUI.md`](02-GUI.md))
 
 Tất cả file dưới đây có `package gui;` ở đầu, dùng `import database.*;`.
 
-- [ ] `src/gui/FormDangNhap.java` — login username/password
-- [ ] `src/gui/FormChinh.java` — cửa sổ chính có JTabbedPane
-- [ ] `src/gui/FormXeMay.java` — Thêm/Sửa/Xoá/Tìm xe
-- [ ] `src/gui/FormKhachHang.java` — Thêm/Sửa/Xoá/Tìm khách
-- [ ] `src/gui/FormHopDong.java` — Thuê xe + Trả xe
-- [ ] `src/gui/FormThongKe.java` — Doanh thu theo khoảng ngày
-- [ ] `src/Main.java` — chạy `new gui.FormDangNhap().setVisible(true)`
+- [x] `src/gui/FormDangNhap.java` — login bằng SQL bảng `nhanvien`
+- [x] `src/gui/FormChinh.java` — cửa sổ chính có JTabbedPane
+- [x] `src/gui/FormXeMay.java` — CRUD + search bằng SQL
+- [x] `src/gui/FormKhachHang.java` — CRUD + search bằng SQL
+- [x] `src/gui/FormHopDong.java` — Thuê xe + Trả xe (có transaction)
+- [x] `src/gui/FormThongKe.java` — Doanh thu theo khoảng ngày bằng SQL
+- [x] `src/Main.java` — chạy `new gui.FormDangNhap().setVisible(true)`
 
 ## 📦 Phần 4 — HOÀN THIỆN & NỘP
 
