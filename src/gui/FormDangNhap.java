@@ -1,6 +1,7 @@
 package gui;
 
 import database.KetNoiCSDL;
+import database.KhachHang;
 import database.NhanVien;
 
 import javax.swing.*;
@@ -80,31 +81,68 @@ public class FormDangNhap extends JFrame implements ActionListener {
             return;
         }
 
-        String sql = "SELECT id, tendangnhap, hoten FROM nhanvien WHERE tendangnhap = ? AND matkhau = ?";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, taiKhoan);
-            ps.setString(2, matKhau);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    NhanVien nv = new NhanVien(
-                            rs.getInt("id"),
-                            rs.getString("tendangnhap"),
-                            rs.getString("hoten")
-                    );
-                    new FormChinh(nv).setVisible(true);
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Sai tên đăng nhập hoặc mật khẩu!",
-                            "Lỗi", JOptionPane.ERROR_MESSAGE);
-                    txtMatKhau.setText("");
-                }
+        try (Connection con = KetNoiCSDL.getConnection()) {
+            NhanVien nv = timNhanVien(con, taiKhoan, matKhau);
+            if (nv != null) {
+                new FormChinh(nv).setVisible(true);
+                dispose();
+                return;
             }
+
+            KhachHang kh = timKhachHang(con, taiKhoan, matKhau);
+            if (kh != null) {
+                new FormChinhKhach(kh).setVisible(true);
+                dispose();
+                return;
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "Sai tên đăng nhập hoặc mật khẩu!",
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            txtMatKhau.setText("");
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
                     "Lỗi kết nối CSDL: " + ex.getMessage(),
                     "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private NhanVien timNhanVien(Connection con, String taiKhoan, String matKhau) throws SQLException {
+        String sql = "SELECT id, tendangnhap, hoten FROM nhanvien WHERE tendangnhap=? AND matkhau=?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, taiKhoan);
+            ps.setString(2, matKhau);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new NhanVien(rs.getInt("id"),
+                            rs.getString("tendangnhap"),
+                            rs.getString("hoten"));
+                }
+            }
+        }
+        return null;
+    }
+
+    private KhachHang timKhachHang(Connection con, String taiKhoan, String matKhau) throws SQLException {
+        String sql = "SELECT id, cmnd, hoten, sdt, diachi, tendangnhap " +
+                "FROM khachhang WHERE tendangnhap=? AND matkhau=?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, taiKhoan);
+            ps.setString(2, matKhau);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    KhachHang kh = new KhachHang(
+                            rs.getInt("id"),
+                            rs.getString("cmnd"),
+                            rs.getString("hoten"),
+                            rs.getString("sdt"),
+                            rs.getString("diachi")
+                    );
+                    kh.setTenDangNhap(rs.getString("tendangnhap"));
+                    return kh;
+                }
+            }
+        }
+        return null;
     }
 }

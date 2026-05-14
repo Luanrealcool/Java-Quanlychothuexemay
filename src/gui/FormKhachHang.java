@@ -10,7 +10,7 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 
 public class FormKhachHang extends JPanel implements ActionListener {
-    JTextField txtCmnd, txtHoTen, txtSdt, txtDiaChi, txtTimKiem;
+    JTextField txtCmnd, txtHoTen, txtSdt, txtDiaChi, txtTenDangNhap, txtMatKhau, txtTimKiem;
     JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTim;
     DefaultTableModel model;
     JTable bang;
@@ -23,7 +23,7 @@ public class FormKhachHang extends JPanel implements ActionListener {
     }
 
     public void GUI() {
-        JPanel pForm = new JPanel(new GridLayout(2, 4, 8, 6));
+        JPanel pForm = new JPanel(new GridLayout(3, 4, 8, 6));
         pForm.setBorder(BorderFactory.createTitledBorder("Thông tin khách hàng"));
 
         pForm.add(new JLabel("CMND/CCCD:"));
@@ -42,9 +42,17 @@ public class FormKhachHang extends JPanel implements ActionListener {
         txtDiaChi = new JTextField();
         pForm.add(txtDiaChi);
 
+        pForm.add(new JLabel("Tên đăng nhập:"));
+        txtTenDangNhap = new JTextField();
+        pForm.add(txtTenDangNhap);
+
+        pForm.add(new JLabel("Mật khẩu:"));
+        txtMatKhau = new JTextField();
+        pForm.add(txtMatKhau);
+
         add(pForm, BorderLayout.NORTH);
 
-        String[] cot = {"ID", "CMND", "Họ tên", "SĐT", "Địa chỉ"};
+        String[] cot = {"ID", "CMND", "Họ tên", "SĐT", "Địa chỉ", "Tên đăng nhập"};
         model = new DefaultTableModel(cot, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -101,7 +109,8 @@ public class FormKhachHang extends JPanel implements ActionListener {
                         rs.getString("cmnd"),
                         rs.getString("hoten"),
                         rs.getString("sdt"),
-                        rs.getString("diachi")
+                        rs.getString("diachi"),
+                        rs.getString("tendangnhap")
                 });
             }
         } catch (SQLException ex) {
@@ -116,6 +125,8 @@ public class FormKhachHang extends JPanel implements ActionListener {
         txtHoTen.setText(getStr(row, 2));
         txtSdt.setText(getStr(row, 3));
         txtDiaChi.setText(getStr(row, 4));
+        txtTenDangNhap.setText(getStr(row, 5));
+        txtMatKhau.setText("");
     }
 
     private String getStr(int row, int col) {
@@ -125,13 +136,15 @@ public class FormKhachHang extends JPanel implements ActionListener {
 
     private void them() {
         if (!kiemTraForm()) return;
-        String sql = "INSERT INTO khachhang(cmnd, hoten, sdt, diachi) VALUES (?,?,?,?)";
+        String sql = "INSERT INTO khachhang(cmnd, hoten, sdt, diachi, tendangnhap, matkhau) VALUES (?,?,?,?,?,?)";
         try (Connection con = KetNoiCSDL.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, txtCmnd.getText().trim());
             ps.setString(2, txtHoTen.getText().trim());
             ps.setString(3, txtSdt.getText().trim());
             ps.setString(4, txtDiaChi.getText().trim());
+            setOrNull(ps, 5, txtTenDangNhap.getText().trim());
+            setOrNull(ps, 6, txtMatKhau.getText().trim());
             ps.executeUpdate();
             xoaForm();
             napDuLieu();
@@ -148,14 +161,28 @@ public class FormKhachHang extends JPanel implements ActionListener {
         }
         if (!kiemTraForm()) return;
         int id = (int) model.getValueAt(row, 0);
-        String sql = "UPDATE khachhang SET cmnd=?, hoten=?, sdt=?, diachi=? WHERE id=?";
+
+        String sql;
+        String mkMoi = txtMatKhau.getText().trim();
+        if (mkMoi.isEmpty()) {
+            sql = "UPDATE khachhang SET cmnd=?, hoten=?, sdt=?, diachi=?, tendangnhap=? WHERE id=?";
+        } else {
+            sql = "UPDATE khachhang SET cmnd=?, hoten=?, sdt=?, diachi=?, tendangnhap=?, matkhau=? WHERE id=?";
+        }
+
         try (Connection con = KetNoiCSDL.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, txtCmnd.getText().trim());
             ps.setString(2, txtHoTen.getText().trim());
             ps.setString(3, txtSdt.getText().trim());
             ps.setString(4, txtDiaChi.getText().trim());
-            ps.setInt(5, id);
+            setOrNull(ps, 5, txtTenDangNhap.getText().trim());
+            if (mkMoi.isEmpty()) {
+                ps.setInt(6, id);
+            } else {
+                ps.setString(6, mkMoi);
+                ps.setInt(7, id);
+            }
             ps.executeUpdate();
             napDuLieu();
         } catch (SQLException ex) {
@@ -204,7 +231,8 @@ public class FormKhachHang extends JPanel implements ActionListener {
                             rs.getString("cmnd"),
                             rs.getString("hoten"),
                             rs.getString("sdt"),
-                            rs.getString("diachi")
+                            rs.getString("diachi"),
+                            rs.getString("tendangnhap")
                     });
                 }
             }
@@ -222,11 +250,18 @@ public class FormKhachHang extends JPanel implements ActionListener {
         return true;
     }
 
+    private void setOrNull(PreparedStatement ps, int idx, String v) throws SQLException {
+        if (v == null || v.isEmpty()) ps.setNull(idx, Types.VARCHAR);
+        else ps.setString(idx, v);
+    }
+
     private void xoaForm() {
         txtCmnd.setText("");
         txtHoTen.setText("");
         txtSdt.setText("");
         txtDiaChi.setText("");
+        txtTenDangNhap.setText("");
+        txtMatKhau.setText("");
         bang.clearSelection();
     }
 }

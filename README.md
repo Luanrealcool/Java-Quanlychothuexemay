@@ -70,6 +70,7 @@ QuanLyChoThueXeMay/
 3. [`docs/01-DATABASE.md`](docs/01-DATABASE.md) — thiết kế bảng + dữ liệu mẫu
 4. [`docs/03-LOGIC.md`](docs/03-LOGIC.md) — class dữ liệu + cách viết SQL
 5. [`docs/02-GUI.md`](docs/02-GUI.md) — bố cục các Form Swing
+6. [`docs/05-TAI-KHOAN-KHACH-HANG.md`](docs/05-TAI-KHOAN-KHACH-HANG.md) — *(tuỳ chọn)* Mở rộng cho khách đăng nhập tự đặt thuê
 
 ## 🚀 Thứ tự làm
 

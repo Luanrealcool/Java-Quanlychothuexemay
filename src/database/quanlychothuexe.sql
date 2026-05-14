@@ -15,7 +15,9 @@ CREATE TABLE khachhang (
     cmnd VARCHAR(20) NOT NULL UNIQUE,
     hoten VARCHAR(100) NOT NULL,
     sdt VARCHAR(15),
-    diachi VARCHAR(200)
+    diachi VARCHAR(200),
+    tendangnhap VARCHAR(50) UNIQUE,
+    matkhau VARCHAR(100)
 );
 
 CREATE TABLE xemay (
@@ -31,7 +33,7 @@ CREATE TABLE hopdong (
     id INT PRIMARY KEY AUTO_INCREMENT,
     makh INT NOT NULL,
     maxe INT NOT NULL,
-    manv INT NOT NULL,
+    manv INT,
     ngaythue DATE NOT NULL,
     ngaytra_dukien DATE NOT NULL,
     ngaytra_thucte DATE,
@@ -45,10 +47,10 @@ CREATE TABLE hopdong (
 INSERT INTO nhanvien(tendangnhap, matkhau, hoten, sdt) VALUES
 ('admin', '123456', 'Quản trị viên', '0900000000');
 
-INSERT INTO khachhang(cmnd, hoten, sdt, diachi) VALUES
-('012345678', 'Nguyễn Văn A', '0901234567', 'Hà Nội'),
-('098765432', 'Trần Thị B', '0912345678', 'Hải Phòng'),
-('111222333', 'Lê Văn C', '0987654321', 'Đà Nẵng');
+INSERT INTO khachhang(cmnd, hoten, sdt, diachi, tendangnhap, matkhau) VALUES
+('012345678', 'Nguyễn Văn A', '0901234567', 'Hà Nội', 'kh001', '123'),
+('098765432', 'Trần Thị B', '0912345678', 'Hải Phòng', 'kh002', '123'),
+('111222333', 'Lê Văn C', '0987654321', 'Đà Nẵng', NULL, NULL);
 
 INSERT INTO xemay(bienso, hangxe, model, giathue, trangthai) VALUES
 ('29A1-12345', 'Honda', 'Wave Alpha', 100000, 'SAN_SANG'),
@@ -58,4 +60,4 @@ INSERT INTO xemay(bienso, hangxe, model, giathue, trangthai) VALUES
 ('29C3-33333', 'Yamaha', 'Sirius', 90000, 'BAO_TRI');
 
 SELECT 'Tao database thanh cong!' AS thongbao;
-SELECT * FROM xemay;
+SELECT 'Tai khoan: admin/123456 (nhan vien), kh001/123 (khach), kh002/123 (khach)' AS taikhoan_mau;
