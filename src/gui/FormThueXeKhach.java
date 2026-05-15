@@ -1,25 +1,29 @@
 package gui;
 
-import database.KetNoiCSDL;
-import database.KhachHang;
+import bus.HopDongBUS;
+import bus.XeMayBUS;
+import dto.KhachHangDTO;
+import dto.XeMayDTO;
+import util.DateUtil;
+import util.LoggerUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 
 public class FormThueXeKhach extends JPanel implements ActionListener {
-    KhachHang khachHang;
+    private final HopDongBUS hopDongBUS = new HopDongBUS();
+    private final XeMayBUS xeMayBUS = new XeMayBUS();
+    KhachHangDTO khachHang;
     JButton btnDatThue;
     DefaultTableModel model;
     JTable bang;
 
-    public FormThueXeKhach(KhachHang kh) {
+    public FormThueXeKhach(KhachHangDTO kh) {
         this.khachHang = kh;
         setLayout(new BorderLayout());
         setBackground(GiaoDien.XAM_NHAT);
@@ -34,7 +38,7 @@ public class FormThueXeKhach extends JPanel implements ActionListener {
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
 
         top.add(GiaoDien.taoPageHeader("Đặt thuê xe máy",
-                "Chọn xe trong danh sách rồi bấm \"Đặt thuê\" để nhập thông tin"));
+                "Chọn xe trong danh sách rồi bấm \"Đặt thuê\""));
         top.add(Box.createVerticalStrut(16));
         top.add(taoToolbar());
         top.add(Box.createVerticalStrut(10));
@@ -51,7 +55,6 @@ public class FormThueXeKhach extends JPanel implements ActionListener {
 
         btnDatThue = new JButton("✓ Đặt thuê");
         GiaoDien.styleNut(btnDatThue, GiaoDien.XANH_LA);
-
         toolbar.add(btnDatThue);
 
         btnDatThue.addActionListener(this);
@@ -84,20 +87,14 @@ public class FormThueXeKhach extends JPanel implements ActionListener {
 
     private void napDuLieu() {
         model.setRowCount(0);
-        String sql = "SELECT * FROM xemay WHERE trangthai='SAN_SANG' ORDER BY id";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
+        try {
+            for (XeMayDTO x : xeMayBUS.layXeSanSang()) {
                 model.addRow(new Object[]{
-                        rs.getInt("id"),
-                        rs.getString("bienso"),
-                        rs.getString("hangxe"),
-                        rs.getString("model"),
-                        rs.getLong("giathue")
+                        x.getId(), x.getBienSo(), x.getHangXe(), x.getModel(), x.getGiaThue()
                 });
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi tải xe", ex);
             JOptionPane.showMessageDialog(this, "Lỗi tải xe: " + ex.getMessage());
         }
     }
@@ -170,45 +167,16 @@ public class FormThueXeKhach extends JPanel implements ActionListener {
         dialog.add(form, BorderLayout.CENTER);
 
         dialog.add(FormXeMay.taoDialogFooter(dialog, false, () -> {
-            LocalDate nThue, nTra;
             try {
-                nThue = LocalDate.parse(txtNgayThue.getText().trim());
-                nTra = LocalDate.parse(txtNgayTra.getText().trim());
-            } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(dialog, "Ngày sai định dạng yyyy-MM-dd!");
-                return false;
-            }
-            if (!nTra.isAfter(nThue)) {
-                JOptionPane.showMessageDialog(dialog, "Ngày trả phải sau ngày thuê!");
-                return false;
-            }
-
-            try (Connection con = KetNoiCSDL.getConnection()) {
-                con.setAutoCommit(false);
-                try (PreparedStatement ps1 = con.prepareStatement(
-                        "INSERT INTO hopdong(makh, maxe, ngaythue, ngaytra_dukien, trangthai) VALUES (?,?,?,?, 'DANG_THUE')");
-                     PreparedStatement ps2 = con.prepareStatement(
-                             "UPDATE xemay SET trangthai='DANG_THUE' WHERE id=?")) {
-                    ps1.setInt(1, khachHang.getId());
-                    ps1.setInt(2, idXe);
-                    ps1.setDate(3, Date.valueOf(nThue));
-                    ps1.setDate(4, Date.valueOf(nTra));
-                    ps1.executeUpdate();
-                    ps2.setInt(1, idXe);
-                    ps2.executeUpdate();
-                    con.commit();
-                } catch (SQLException ex) {
-                    con.rollback();
-                    throw ex;
-                } finally {
-                    con.setAutoCommit(true);
-                }
-                napDuLieu();
+                LocalDate nThue = DateUtil.parse(txtNgayThue.getText());
+                LocalDate nTra = DateUtil.parse(txtNgayTra.getText());
+                hopDongBUS.taoHopDong(khachHang.getId(), idXe, null, nThue, nTra, 0);
                 JOptionPane.showMessageDialog(dialog,
                         "Đặt thuê thành công! Mời bạn đến cửa hàng nhận xe.");
+                napDuLieu();
                 return true;
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return false;
             }
         }), BorderLayout.SOUTH);

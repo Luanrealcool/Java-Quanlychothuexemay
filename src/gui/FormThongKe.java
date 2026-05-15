@@ -1,17 +1,20 @@
 package gui;
 
-import database.KetNoiCSDL;
+import bus.ThongKeBUS;
+import dto.HopDongDTO;
+import util.DateUtil;
+import util.LoggerUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 
 public class FormThongKe extends JPanel implements ActionListener {
+    private final ThongKeBUS bus = new ThongKeBUS();
+
     JTextField txtTuNgay, txtDenNgay;
     JButton btnThongKe;
     JLabel lblTongDoanhThu, lblSoHopDong, lblTrungBinh, lblTraTre;
@@ -44,9 +47,7 @@ public class FormThongKe extends JPanel implements ActionListener {
     }
 
     private JPanel taoFilterCard() {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(GiaoDien.TRANG);
-        card.setBorder(BorderFactory.createLineBorder(GiaoDien.VIEN));
+        JPanel card = GiaoDien.taoCard();
         card.setAlignmentX(Component.LEFT_ALIGNMENT);
         card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
 
@@ -104,18 +105,16 @@ public class FormThongKe extends JPanel implements ActionListener {
     }
 
     private JPanel taoTableCard() {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(GiaoDien.TRANG);
-        card.setBorder(BorderFactory.createLineBorder(GiaoDien.VIEN));
+        JPanel card = GiaoDien.taoCard();
         card.add(GiaoDien.taoCardHeader("CHI TIẾT HỢP ĐỒNG ĐÃ TRẢ"), BorderLayout.NORTH);
 
-        String[] cot = {"ID HĐ", "Khách hàng", "Xe máy", "Ngày trả", "Tổng tiền"};
+        String[] cot = {"ID", "Mã HĐ", "Khách hàng", "Xe máy", "Ngày trả", "Tổng tiền"};
         model = new DefaultTableModel(cot, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         bang = new JTable(model);
         GiaoDien.styleBang(bang);
-        GiaoDien.setRenderer(bang, 4, GiaoDien.rendererTien());
+        GiaoDien.setRenderer(bang, 5, GiaoDien.rendererTien());
 
         JScrollPane scroll = new JScrollPane(bang);
         scroll.setBorder(BorderFactory.createEmptyBorder());
@@ -130,60 +129,31 @@ public class FormThongKe extends JPanel implements ActionListener {
     }
 
     private void thongKe() {
-        LocalDate tu, den;
         try {
-            tu = LocalDate.parse(txtTuNgay.getText().trim());
-            den = LocalDate.parse(txtDenNgay.getText().trim());
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Ngày sai định dạng yyyy-MM-dd!");
-            return;
-        }
-        if (den.isBefore(tu)) {
-            JOptionPane.showMessageDialog(this, "Ngày kết thúc phải sau ngày bắt đầu!");
-            return;
-        }
+            LocalDate tu = DateUtil.parse(txtTuNgay.getText());
+            LocalDate den = DateUtil.parse(txtDenNgay.getText());
+            ThongKeBUS.KetQuaThongKe kq = bus.thongKeTheoNgay(tu, den);
 
-        model.setRowCount(0);
-        long tong = 0;
-        int soHd = 0, soTre = 0;
-        String sql = "SELECT h.id, k.hoten AS ten_kh, " +
-                "CONCAT(x.hangxe, ' ', x.model, ' (', x.bienso, ')') AS thong_tin_xe, " +
-                "h.ngaythue, h.ngaytra_dukien, h.ngaytra_thucte, h.tongtien " +
-                "FROM hopdong h " +
-                "JOIN khachhang k ON h.makh = k.id " +
-                "JOIN xemay x ON h.maxe = x.id " +
-                "WHERE h.trangthai = 'DA_TRA' AND h.ngaytra_thucte BETWEEN ? AND ? " +
-                "ORDER BY h.ngaytra_thucte DESC";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setDate(1, Date.valueOf(tu));
-            ps.setDate(2, Date.valueOf(den));
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    long tien = rs.getLong("tongtien");
-                    tong += tien;
-                    soHd++;
-                    Date traTt = rs.getDate("ngaytra_thucte");
-                    Date traDk = rs.getDate("ngaytra_dukien");
-                    if (traTt != null && traDk != null && traTt.after(traDk)) soTre++;
-                    model.addRow(new Object[]{
-                            rs.getInt("id"),
-                            rs.getString("ten_kh"),
-                            rs.getString("thong_tin_xe"),
-                            traTt == null ? "" : traTt.toString(),
-                            tien
-                    });
-                }
+            model.setRowCount(0);
+            for (HopDongDTO h : kq.danhSach) {
+                model.addRow(new Object[]{
+                        h.getId(),
+                        h.getMaSoHopDong(),
+                        h.getTenKhachHang(),
+                        h.getThongTinXe(),
+                        h.getNgayTraThucTe() == null ? "" : h.getNgayTraThucTe(),
+                        h.getTongTien()
+                });
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi thống kê: " + ex.getMessage());
-            return;
+            lblTongDoanhThu.setText(String.format("%,d đ", kq.tongDoanhThu));
+            lblSoHopDong.setText(String.valueOf(kq.soHopDong));
+            lblTrungBinh.setText(String.format("%,d đ", kq.trungBinhMoiHd));
+            lblTraTre.setText(String.valueOf(kq.soHopDongTre));
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi thống kê", ex);
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
-
-        long tb = soHd == 0 ? 0 : tong / soHd;
-        lblTongDoanhThu.setText(String.format("%,d đ", tong));
-        lblSoHopDong.setText(String.valueOf(soHd));
-        lblTrungBinh.setText(String.format("%,d đ", tb));
-        lblTraTre.setText(String.valueOf(soTre));
     }
 }

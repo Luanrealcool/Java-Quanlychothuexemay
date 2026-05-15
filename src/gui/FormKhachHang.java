@@ -1,27 +1,36 @@
 package gui;
 
-import database.KetNoiCSDL;
+import bus.KhachHangBUS;
+import dto.KhachHangDTO;
+import dto.PageResult;
+import gui.common.PhanTrangPanel;
+import util.DateUtil;
+import util.LoggerUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
+import java.time.LocalDate;
 
 public class FormKhachHang extends JPanel implements ActionListener {
+    private final KhachHangBUS bus = new KhachHangBUS();
+
     JTextField txtTimKiem;
     JButton btnThem, btnSua, btnXoa, btnTim;
     DefaultTableModel model;
     JTable bang;
     JLabel lblStatTong, lblStatCoTk, lblStatChuaTk;
+    PhanTrangPanel phanTrangPanel;
 
     public FormKhachHang() {
         setLayout(new BorderLayout());
         setBackground(GiaoDien.XAM_NHAT);
         setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
         GUI();
-        napDuLieu();
+        capNhatStats();
+        taiTrang(1);
     }
 
     public void GUI() {
@@ -39,6 +48,10 @@ public class FormKhachHang extends JPanel implements ActionListener {
 
         add(top, BorderLayout.NORTH);
         add(taoTableCard(), BorderLayout.CENTER);
+
+        phanTrangPanel = new PhanTrangPanel();
+        phanTrangPanel.setOnChange((p, s) -> taiTrang(p));
+        add(phanTrangPanel, BorderLayout.SOUTH);
     }
 
     private JPanel taoStatsRow() {
@@ -93,6 +106,7 @@ public class FormKhachHang extends JPanel implements ActionListener {
         btnSua.addActionListener(this);
         btnXoa.addActionListener(this);
         btnTim.addActionListener(this);
+        txtTimKiem.addActionListener(e -> taiTrang(1));
         return toolbar;
     }
 
@@ -100,7 +114,7 @@ public class FormKhachHang extends JPanel implements ActionListener {
         JPanel card = GiaoDien.taoCard();
         card.add(GiaoDien.taoCardHeader("DANH SÁCH KHÁCH HÀNG"), BorderLayout.NORTH);
 
-        String[] cot = {"ID", "CMND", "Họ tên", "SĐT", "Địa chỉ", "Tên đăng nhập"};
+        String[] cot = {"ID", "CMND", "Họ tên", "SĐT", "Ngày sinh", "Giới tính", "Tên đăng nhập"};
         model = new DefaultTableModel(cot, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -116,48 +130,64 @@ public class FormKhachHang extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnThem) hienDialog(false);
-        else if (e.getSource() == btnSua) hienDialog(true);
-        else if (e.getSource() == btnXoa) xoa();
-        else if (e.getSource() == btnTim) tim();
+        try {
+            if (e.getSource() == btnThem) hienDialog(false);
+            else if (e.getSource() == btnSua) hienDialog(true);
+            else if (e.getSource() == btnXoa) xoa();
+            else if (e.getSource() == btnTim) taiTrang(1);
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi FormKhachHang", ex);
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+        }
     }
 
-    private void napDuLieu() {
-        model.setRowCount(0);
-        int tong = 0, co = 0;
-        String sql = "SELECT * FROM khachhang ORDER BY id";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                String tdn = rs.getString("tendangnhap");
-                tong++;
-                if (tdn != null && !tdn.isEmpty()) co++;
+    private void taiTrang(int trang) {
+        try {
+            String kw = txtTimKiem.getText().trim();
+            PageResult<KhachHangDTO> kq = bus.phanTrang(trang, phanTrangPanel.getPageSize(),
+                    kw, "id", "ASC");
+
+            model.setRowCount(0);
+            for (KhachHangDTO kh : kq.getItems()) {
                 model.addRow(new Object[]{
-                        rs.getInt("id"),
-                        rs.getString("cmnd"),
-                        rs.getString("hoten"),
-                        rs.getString("sdt"),
-                        rs.getString("diachi"),
-                        tdn
+                        kh.getId(), kh.getCmnd(), kh.getHoTen(), kh.getSdt(),
+                        kh.getNgaySinh() == null ? "" : kh.getNgaySinh().toString(),
+                        kh.getGioiTinh() == null ? "" : kh.getGioiTinh(),
+                        kh.getTenDangNhap()
                 });
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải khách hàng: " + ex.getMessage());
+            phanTrangPanel.setTotal(kq.getTotalCount(), kq.getCurrentPage(), kq.getPageSize());
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi tải KH", ex);
+            JOptionPane.showMessageDialog(this, ex.getMessage());
         }
-        lblStatTong.setText(String.valueOf(tong));
-        lblStatCoTk.setText(String.valueOf(co));
-        lblStatChuaTk.setText(String.valueOf(tong - co));
+    }
+
+    private void capNhatStats() {
+        try {
+            int tong = bus.demTatCa();
+            int co = bus.demCoTaiKhoan();
+            lblStatTong.setText(String.valueOf(tong));
+            lblStatCoTk.setText(String.valueOf(co));
+            lblStatChuaTk.setText(String.valueOf(tong - co));
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi stats", ex);
+        }
     }
 
     private void hienDialog(boolean laEdit) {
-        int row = -1;
+        Integer idEdit = null;
+        KhachHangDTO khEdit = null;
         if (laEdit) {
-            row = bang.getSelectedRow();
+            int row = bang.getSelectedRow();
             if (row < 0) {
                 JOptionPane.showMessageDialog(this, "Chọn dòng cần sửa!");
                 return;
             }
+            idEdit = (int) model.getValueAt(row, 0);
+            khEdit = bus.timTheoId(idEdit);
         }
 
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this),
@@ -165,107 +195,84 @@ public class FormKhachHang extends JPanel implements ActionListener {
                 Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setLayout(new BorderLayout());
 
-        Color headerColor = laEdit ? GiaoDien.XANH_CHINH : GiaoDien.XANH_LA;
+        Color hc = laEdit ? GiaoDien.XANH_CHINH : GiaoDien.XANH_LA;
         dialog.add(FormXeMay.taoDialogHeader(
                 laEdit ? "Sửa thông tin khách hàng" : "Thêm khách hàng mới",
-                laEdit ? "✎" : "+", headerColor), BorderLayout.NORTH);
+                laEdit ? "✎" : "+", hc), BorderLayout.NORTH);
 
         JTextField txtCmnd = new JTextField();
         JTextField txtHoTen = new JTextField();
         JTextField txtSdt = new JTextField();
-        JTextField txtDiaChi = new JTextField();
+        JTextField txtNgaySinh = new JTextField();
+        JComboBox<String> cboGt = new JComboBox<>(new String[]{"", "NAM", "NU", "KHAC"});
         JTextField txtTdn = new JTextField();
         JTextField txtMk = new JTextField();
-        GiaoDien.styleInput(txtCmnd);
-        GiaoDien.styleInput(txtHoTen);
-        GiaoDien.styleInput(txtSdt);
-        GiaoDien.styleInput(txtDiaChi);
-        GiaoDien.styleInput(txtTdn);
-        GiaoDien.styleInput(txtMk);
+        for (JComponent c : new JComponent[]{txtCmnd, txtHoTen, txtSdt,
+                txtNgaySinh, cboGt, txtTdn, txtMk}) {
+            GiaoDien.styleInput(c);
+        }
 
-        if (laEdit) {
-            txtCmnd.setText(getStr(row, 1));
-            txtHoTen.setText(getStr(row, 2));
-            txtSdt.setText(getStr(row, 3));
-            txtDiaChi.setText(getStr(row, 4));
-            txtTdn.setText(getStr(row, 5));
+        if (laEdit && khEdit != null) {
+            txtCmnd.setText(khEdit.getCmnd());
+            txtHoTen.setText(khEdit.getHoTen());
+            txtSdt.setText(khEdit.getSdt());
+            if (khEdit.getNgaySinh() != null) txtNgaySinh.setText(khEdit.getNgaySinh().toString());
+            cboGt.setSelectedItem(khEdit.getGioiTinh() == null ? "" : khEdit.getGioiTinh());
+            txtTdn.setText(khEdit.getTenDangNhap());
         }
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(GiaoDien.TRANG);
-        form.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
+        form.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(8, 6, 8, 6);
+        g.insets = new Insets(7, 6, 7, 6);
         g.fill = GridBagConstraints.HORIZONTAL;
         g.anchor = GridBagConstraints.WEST;
 
         FormXeMay.addFormRow(form, g, 0, "CMND/CCCD *", txtCmnd);
         FormXeMay.addFormRow(form, g, 1, "Họ tên *", txtHoTen);
         FormXeMay.addFormRow(form, g, 2, "Số điện thoại", txtSdt);
-        FormXeMay.addFormRow(form, g, 3, "Địa chỉ", txtDiaChi);
-        FormXeMay.addFormRow(form, g, 4, "Tên đăng nhập (tuỳ chọn)", txtTdn);
-        FormXeMay.addFormRow(form, g, 5,
-                laEdit ? "Mật khẩu (để trống nếu không đổi)" : "Mật khẩu", txtMk);
+        FormXeMay.addFormRow(form, g, 3, "Ngày sinh (yyyy-MM-dd)", txtNgaySinh);
+        FormXeMay.addFormRow(form, g, 4, "Giới tính", cboGt);
+        FormXeMay.addFormRow(form, g, 5, "Tên đăng nhập (tuỳ chọn)", txtTdn);
+        FormXeMay.addFormRow(form, g, 6, laEdit ? "Mật khẩu mới (để trống nếu không đổi)" : "Mật khẩu", txtMk);
 
-        dialog.add(form, BorderLayout.CENTER);
+        dialog.add(new JScrollPane(form), BorderLayout.CENTER);
 
-        final int finalRow = row;
+        final Integer idF = idEdit;
         dialog.add(FormXeMay.taoDialogFooter(dialog, laEdit, () -> {
-            if (txtCmnd.getText().trim().isEmpty() || txtHoTen.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Nhập đủ CMND và họ tên!");
-                return false;
-            }
-            try (Connection con = KetNoiCSDL.getConnection()) {
-                if (laEdit) {
-                    int id = (int) model.getValueAt(finalRow, 0);
-                    String mkMoi = txtMk.getText().trim();
-                    String sql = mkMoi.isEmpty()
-                            ? "UPDATE khachhang SET cmnd=?, hoten=?, sdt=?, diachi=?, tendangnhap=? WHERE id=?"
-                            : "UPDATE khachhang SET cmnd=?, hoten=?, sdt=?, diachi=?, tendangnhap=?, matkhau=? WHERE id=?";
-                    try (PreparedStatement ps = con.prepareStatement(sql)) {
-                        ps.setString(1, txtCmnd.getText().trim());
-                        ps.setString(2, txtHoTen.getText().trim());
-                        ps.setString(3, txtSdt.getText().trim());
-                        ps.setString(4, txtDiaChi.getText().trim());
-                        setOrNull(ps, 5, txtTdn.getText().trim());
-                        if (mkMoi.isEmpty()) ps.setInt(6, id);
-                        else { ps.setString(6, mkMoi); ps.setInt(7, id); }
-                        ps.executeUpdate();
-                    }
-                } else {
-                    try (PreparedStatement ps = con.prepareStatement(
-                            "INSERT INTO khachhang(cmnd, hoten, sdt, diachi, tendangnhap, matkhau) VALUES (?,?,?,?,?,?)")) {
-                        ps.setString(1, txtCmnd.getText().trim());
-                        ps.setString(2, txtHoTen.getText().trim());
-                        ps.setString(3, txtSdt.getText().trim());
-                        ps.setString(4, txtDiaChi.getText().trim());
-                        setOrNull(ps, 5, txtTdn.getText().trim());
-                        setOrNull(ps, 6, txtMk.getText().trim());
-                        ps.executeUpdate();
-                    }
+            try {
+                KhachHangDTO kh = new KhachHangDTO();
+                if (laEdit) kh.setId(idF);
+                kh.setCmnd(txtCmnd.getText().trim());
+                kh.setHoTen(txtHoTen.getText().trim());
+                kh.setSdt(txtSdt.getText().trim());
+                if (!txtNgaySinh.getText().trim().isEmpty()) {
+                    LocalDate ns = DateUtil.parse(txtNgaySinh.getText());
+                    kh.setNgaySinh(ns);
                 }
-                napDuLieu();
+                String gt = (String) cboGt.getSelectedItem();
+                kh.setGioiTinh(gt == null || gt.isEmpty() ? null : gt);
+                String tdn = txtTdn.getText().trim();
+                kh.setTenDangNhap(tdn.isEmpty() ? null : tdn);
+                String mk = txtMk.getText().trim();
+
+                if (laEdit) bus.sua(kh, mk);
+                else bus.them(kh, mk);
+
+                capNhatStats();
+                taiTrang(phanTrangPanel.getCurrentPage());
                 return true;
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return false;
             }
         }), BorderLayout.SOUTH);
 
-        dialog.setSize(520, 520);
+        dialog.setSize(560, 600);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
-    }
-
-    private String getStr(int row, int col) {
-        Object v = model.getValueAt(row, col);
-        return v == null ? "" : v.toString();
-    }
-
-    private void setOrNull(PreparedStatement ps, int idx, String v) throws SQLException {
-        if (v == null || v.isEmpty()) ps.setNull(idx, Types.VARCHAR);
-        else ps.setString(idx, v);
     }
 
     private void xoa() {
@@ -281,41 +288,8 @@ public class FormKhachHang extends JPanel implements ActionListener {
         if (chon != JOptionPane.YES_OPTION) return;
 
         int id = (int) model.getValueAt(row, 0);
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement("DELETE FROM khachhang WHERE id=?")) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
-            napDuLieu();
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Không xoá được (có thể khách đang có hợp đồng): " + ex.getMessage());
-        }
-    }
-
-    private void tim() {
-        String tu = txtTimKiem.getText().trim();
-        if (tu.isEmpty()) { napDuLieu(); return; }
-        model.setRowCount(0);
-        String sql = "SELECT * FROM khachhang WHERE cmnd LIKE ? OR hoten LIKE ? ORDER BY id";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            String like = "%" + tu + "%";
-            ps.setString(1, like);
-            ps.setString(2, like);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    model.addRow(new Object[]{
-                            rs.getInt("id"),
-                            rs.getString("cmnd"),
-                            rs.getString("hoten"),
-                            rs.getString("sdt"),
-                            rs.getString("diachi"),
-                            rs.getString("tendangnhap")
-                    });
-                }
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tìm: " + ex.getMessage());
-        }
+        bus.xoa(id);
+        capNhatStats();
+        taiTrang(phanTrangPanel.getCurrentPage());
     }
 }

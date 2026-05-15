@@ -1,6 +1,6 @@
 package gui;
 
-import database.NhanVien;
+import dto.NhanVienDTO;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,13 +11,13 @@ public class FormChinh extends JFrame implements ActionListener {
     static final Color SIDEBAR_BG = GiaoDien.SIDEBAR;
     static final Color SIDEBAR_ACTIVE = GiaoDien.XANH_CHINH;
 
-    NhanVien nhanVien;
+    NhanVienDTO nhanVien;
     JButton btnXeMay, btnKhachHang, btnHopDong, btnThongKe, btnDangXuat;
     CardLayout cardLayout;
     JPanel pContent;
     JButton btnHienTai;
 
-    public FormChinh(NhanVien nv) {
+    public FormChinh(NhanVienDTO nv) {
         super("Quản lý cho thuê xe máy");
         this.nhanVien = nv;
         GUI();

@@ -1,20 +1,24 @@
 package gui;
 
-import database.KetNoiCSDL;
-import database.KhachHang;
+import bus.HopDongBUS;
+import constant.TrangThaiHopDong;
+import dto.HopDongDTO;
+import dto.KhachHangDTO;
+import util.LoggerUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.*;
+import java.util.List;
 
 public class FormHopDongCuaToi extends JPanel {
-    KhachHang khachHang;
+    private final HopDongBUS hopDongBUS = new HopDongBUS();
+    KhachHangDTO khachHang;
     JLabel lblStatTong, lblStatDangThue, lblStatDaTra, lblStatTongChi;
     DefaultTableModel model;
     JTable bang;
 
-    public FormHopDongCuaToi(KhachHang kh) {
+    public FormHopDongCuaToi(KhachHangDTO kh) {
         this.khachHang = kh;
         setLayout(new BorderLayout());
         setBackground(GiaoDien.XAM_NHAT);
@@ -60,15 +64,15 @@ public class FormHopDongCuaToi extends JPanel {
         JPanel card = GiaoDien.taoCard();
         card.add(GiaoDien.taoCardHeader("CHI TIẾT HỢP ĐỒNG"), BorderLayout.NORTH);
 
-        String[] cot = {"ID", "Xe máy", "Ngày thuê", "Trả dự kiến",
+        String[] cot = {"ID", "Mã HĐ", "Xe máy", "Ngày thuê", "Trả dự kiến",
                 "Trả thực tế", "Tổng tiền", "Trạng thái"};
         model = new DefaultTableModel(cot, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         bang = new JTable(model);
         GiaoDien.styleBang(bang);
-        GiaoDien.setRenderer(bang, 5, GiaoDien.rendererTien());
-        GiaoDien.setRenderer(bang, 6, GiaoDien.rendererTrangThai());
+        GiaoDien.setRenderer(bang, 6, GiaoDien.rendererTien());
+        GiaoDien.setRenderer(bang, 7, GiaoDien.rendererTrangThai());
 
         JScrollPane scroll = new JScrollPane(bang);
         scroll.setBorder(BorderFactory.createEmptyBorder());
@@ -81,35 +85,29 @@ public class FormHopDongCuaToi extends JPanel {
         model.setRowCount(0);
         int tong = 0, dt = 0, da = 0;
         long tongChi = 0;
-        String sql = "SELECT h.id, " +
-                "CONCAT(x.hangxe, ' ', x.model, ' (', x.bienso, ')') AS thong_tin_xe, " +
-                "h.ngaythue, h.ngaytra_dukien, h.ngaytra_thucte, h.tongtien, h.trangthai " +
-                "FROM hopdong h JOIN xemay x ON h.maxe = x.id " +
-                "WHERE h.makh = ? ORDER BY h.id DESC";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, khachHang.getId());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Date traTt = rs.getDate("ngaytra_thucte");
-                    long tien = rs.getLong("tongtien");
-                    String tt = rs.getString("trangthai");
-                    tong++;
-                    if ("DANG_THUE".equals(tt)) dt++;
-                    else if ("DA_TRA".equals(tt)) { da++; tongChi += tien; }
-                    model.addRow(new Object[]{
-                            rs.getInt("id"),
-                            rs.getString("thong_tin_xe"),
-                            rs.getDate("ngaythue").toString(),
-                            rs.getDate("ngaytra_dukien").toString(),
-                            traTt == null ? "" : traTt.toString(),
-                            tien,
-                            tt
-                    });
+        try {
+            List<HopDongDTO> list = hopDongBUS.hopDongCuaKhach(khachHang.getId());
+            for (HopDongDTO hd : list) {
+                tong++;
+                if (TrangThaiHopDong.DANG_THUE.equals(hd.getTrangThai())) dt++;
+                else if (TrangThaiHopDong.DA_TRA.equals(hd.getTrangThai())) {
+                    da++;
+                    tongChi += hd.getTongTien();
                 }
+                model.addRow(new Object[]{
+                        hd.getId(),
+                        hd.getMaSoHopDong(),
+                        hd.getThongTinXe(),
+                        hd.getNgayThue(),
+                        hd.getNgayTraDuKien(),
+                        hd.getNgayTraThucTe() == null ? "" : hd.getNgayTraThucTe(),
+                        hd.getTongTien(),
+                        hd.getTrangThai()
+                });
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải hợp đồng: " + ex.getMessage());
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi tải hợp đồng của khách", ex);
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
         lblStatTong.setText(String.valueOf(tong));
         lblStatDangThue.setText(String.valueOf(dt));

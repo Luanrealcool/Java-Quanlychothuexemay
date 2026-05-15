@@ -1,34 +1,47 @@
 package gui;
 
-import database.KetNoiCSDL;
-import database.KhachHang;
-import database.NhanVien;
-import database.XeMay;
+import bus.HopDongBUS;
+import bus.KhachHangBUS;
+import bus.XeMayBUS;
+import constant.TrangThaiHopDong;
+import dto.HopDongDTO;
+import dto.KhachHangDTO;
+import dto.NhanVienDTO;
+import dto.PageResult;
+import dto.XeMayDTO;
+import gui.common.PhanTrangPanel;
+import util.DateUtil;
+import util.LoggerUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 public class FormHopDong extends JPanel implements ActionListener {
-    NhanVien nhanVien;
+    private final HopDongBUS hopDongBUS = new HopDongBUS();
+    private final XeMayBUS xeMayBUS = new XeMayBUS();
+    private final KhachHangBUS khachHangBUS = new KhachHangBUS();
+
+    NhanVienDTO nhanVien;
     JButton btnTaoHopDong, btnTraXe;
+    JComboBox<String> cboLocTrangThai;
     DefaultTableModel model;
     JTable bang;
     JLabel lblStatTong, lblStatDangThue, lblStatDaTra, lblStatDoanhThu;
+    PhanTrangPanel phanTrangPanel;
 
-    public FormHopDong(NhanVien nv) {
+    public FormHopDong(NhanVienDTO nv) {
         this.nhanVien = nv;
         setLayout(new BorderLayout());
         setBackground(GiaoDien.XAM_NHAT);
         setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
         GUI();
-        napDuLieu();
+        capNhatStats();
+        taiTrang(1);
     }
 
     public void GUI() {
@@ -46,6 +59,10 @@ public class FormHopDong extends JPanel implements ActionListener {
 
         add(top, BorderLayout.NORTH);
         add(taoTableCard(), BorderLayout.CENTER);
+
+        phanTrangPanel = new PhanTrangPanel();
+        phanTrangPanel.setOnChange((p, s) -> taiTrang(p));
+        add(phanTrangPanel, BorderLayout.SOUTH);
     }
 
     private JPanel taoStatsRow() {
@@ -67,18 +84,30 @@ public class FormHopDong extends JPanel implements ActionListener {
     }
 
     private JPanel taoToolbar() {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setOpaque(false);
         toolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
         toolbar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
 
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        left.setOpaque(false);
+        left.add(new JLabel("Lọc trạng thái:"));
+        cboLocTrangThai = new JComboBox<>(new String[]{"-- Tất cả --",
+                TrangThaiHopDong.DANG_THUE, TrangThaiHopDong.DA_TRA, TrangThaiHopDong.HUY});
+        GiaoDien.styleInput(cboLocTrangThai);
+        cboLocTrangThai.addActionListener(e -> taiTrang(1));
+        left.add(cboLocTrangThai);
+        toolbar.add(left, BorderLayout.WEST);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        right.setOpaque(false);
         btnTaoHopDong = new JButton("+ Tạo hợp đồng");
         btnTraXe = new JButton("✓ Trả xe");
         GiaoDien.styleNut(btnTaoHopDong, GiaoDien.XANH_LA);
         GiaoDien.styleNut(btnTraXe, GiaoDien.CAM);
-
-        toolbar.add(btnTaoHopDong);
-        toolbar.add(btnTraXe);
+        right.add(btnTaoHopDong);
+        right.add(btnTraXe);
+        toolbar.add(right, BorderLayout.EAST);
 
         btnTaoHopDong.addActionListener(this);
         btnTraXe.addActionListener(this);
@@ -89,15 +118,15 @@ public class FormHopDong extends JPanel implements ActionListener {
         JPanel card = GiaoDien.taoCard();
         card.add(GiaoDien.taoCardHeader("DANH SÁCH HỢP ĐỒNG"), BorderLayout.NORTH);
 
-        String[] cot = {"ID", "Khách hàng", "Xe máy", "Ngày thuê",
+        String[] cot = {"ID", "Mã HĐ", "Khách hàng", "Xe máy", "Ngày thuê",
                 "Trả dự kiến", "Trả thực tế", "Tổng tiền", "Trạng thái"};
         model = new DefaultTableModel(cot, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         bang = new JTable(model);
         GiaoDien.styleBang(bang);
-        GiaoDien.setRenderer(bang, 6, GiaoDien.rendererTien());
-        GiaoDien.setRenderer(bang, 7, GiaoDien.rendererTrangThai());
+        GiaoDien.setRenderer(bang, 7, GiaoDien.rendererTien());
+        GiaoDien.setRenderer(bang, 8, GiaoDien.rendererTrangThai());
 
         JScrollPane scroll = new JScrollPane(bang);
         scroll.setBorder(BorderFactory.createEmptyBorder());
@@ -108,49 +137,55 @@ public class FormHopDong extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnTaoHopDong) hienDialogTaoHopDong();
-        else if (e.getSource() == btnTraXe) traXe();
+        try {
+            if (e.getSource() == btnTaoHopDong) hienDialogTaoHopDong();
+            else if (e.getSource() == btnTraXe) traXe();
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi FormHopDong", ex);
+            JOptionPane.showMessageDialog(this, "Lỗi hệ thống: " + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private void napDuLieu() {
-        model.setRowCount(0);
-        int tong = 0, dt = 0, da = 0;
-        long doanhThu = 0;
-        String sql = "SELECT h.id, k.hoten AS ten_kh, " +
-                "CONCAT(x.bienso, ' - ', x.hangxe, ' ', x.model) AS thong_tin_xe, " +
-                "h.ngaythue, h.ngaytra_dukien, h.ngaytra_thucte, h.tongtien, h.trangthai " +
-                "FROM hopdong h " +
-                "JOIN khachhang k ON h.makh = k.id " +
-                "JOIN xemay x ON h.maxe = x.id " +
-                "ORDER BY h.id DESC";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Date traTt = rs.getDate("ngaytra_thucte");
-                String tt = rs.getString("trangthai");
-                long tien = rs.getLong("tongtien");
-                tong++;
-                if ("DANG_THUE".equals(tt)) dt++;
-                else if ("DA_TRA".equals(tt)) { da++; doanhThu += tien; }
+    private void taiTrang(int trang) {
+        try {
+            int idx = cboLocTrangThai.getSelectedIndex();
+            String trangThai = idx <= 0 ? null : (String) cboLocTrangThai.getSelectedItem();
+            PageResult<HopDongDTO> kq = hopDongBUS.phanTrang(trang,
+                    phanTrangPanel.getPageSize(), trangThai, null, null, null, "id", "ASC");
+
+            model.setRowCount(0);
+            for (HopDongDTO hd : kq.getItems()) {
                 model.addRow(new Object[]{
-                        rs.getInt("id"),
-                        rs.getString("ten_kh"),
-                        rs.getString("thong_tin_xe"),
-                        rs.getDate("ngaythue").toString(),
-                        rs.getDate("ngaytra_dukien").toString(),
-                        traTt == null ? "" : traTt.toString(),
-                        tien,
-                        tt
+                        hd.getId(),
+                        hd.getMaSoHopDong(),
+                        hd.getTenKhachHang(),
+                        hd.getThongTinXe(),
+                        hd.getNgayThue(),
+                        hd.getNgayTraDuKien(),
+                        hd.getNgayTraThucTe() == null ? "" : hd.getNgayTraThucTe(),
+                        hd.getTongTien(),
+                        hd.getTrangThai()
                 });
             }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải hợp đồng: " + ex.getMessage());
+            phanTrangPanel.setTotal(kq.getTotalCount(), kq.getCurrentPage(), kq.getPageSize());
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi tải hợp đồng", ex);
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
-        lblStatTong.setText(String.valueOf(tong));
-        lblStatDangThue.setText(String.valueOf(dt));
-        lblStatDaTra.setText(String.valueOf(da));
-        lblStatDoanhThu.setText(String.format("%,d đ", doanhThu));
+    }
+
+    private void capNhatStats() {
+        try {
+            lblStatTong.setText(String.valueOf(hopDongBUS.demTatCa()));
+            lblStatDangThue.setText(String.valueOf(hopDongBUS.demTheoTrangThai(TrangThaiHopDong.DANG_THUE)));
+            lblStatDaTra.setText(String.valueOf(hopDongBUS.demTheoTrangThai(TrangThaiHopDong.DA_TRA)));
+            lblStatDoanhThu.setText(String.format("%,d đ", hopDongBUS.tongDoanhThu()));
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi stats", ex);
+        }
     }
 
     private void hienDialogTaoHopDong() {
@@ -161,37 +196,19 @@ public class FormHopDong extends JPanel implements ActionListener {
         dialog.add(FormXeMay.taoDialogHeader("Tạo hợp đồng thuê xe", "+", GiaoDien.XANH_LA),
                 BorderLayout.NORTH);
 
-        JComboBox<KhachHang> cboKh = new JComboBox<>();
-        JComboBox<XeMay> cboXe = new JComboBox<>();
+        JComboBox<KhachHangDTO> cboKh = new JComboBox<>();
+        JComboBox<XeMayDTO> cboXe = new JComboBox<>();
         JTextField txtNgayThue = new JTextField(LocalDate.now().toString());
         JTextField txtNgayTra = new JTextField(LocalDate.now().plusDays(3).toString());
+        JTextField txtTienCoc = new JTextField("0");
         GiaoDien.styleInput(cboKh);
         GiaoDien.styleInput(cboXe);
         GiaoDien.styleInput(txtNgayThue);
         GiaoDien.styleInput(txtNgayTra);
+        GiaoDien.styleInput(txtTienCoc);
 
-        try (Connection con = KetNoiCSDL.getConnection()) {
-            try (PreparedStatement ps = con.prepareStatement(
-                    "SELECT * FROM khachhang ORDER BY hoten");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    cboKh.addItem(new KhachHang(rs.getInt("id"), rs.getString("cmnd"),
-                            rs.getString("hoten"), rs.getString("sdt"), rs.getString("diachi")));
-                }
-            }
-            try (PreparedStatement ps = con.prepareStatement(
-                    "SELECT * FROM xemay WHERE trangthai='SAN_SANG' ORDER BY bienso");
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    cboXe.addItem(new XeMay(rs.getInt("id"), rs.getString("bienso"),
-                            rs.getString("hangxe"), rs.getString("model"),
-                            rs.getLong("giathue"), rs.getString("trangthai")));
-                }
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(dialog, "Lỗi tải dữ liệu: " + ex.getMessage());
-            return;
-        }
+        for (KhachHangDTO kh : khachHangBUS.layTatCa()) cboKh.addItem(kh);
+        for (XeMayDTO xe : xeMayBUS.layXeSanSang()) cboXe.addItem(xe);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(GiaoDien.TRANG);
@@ -206,60 +223,34 @@ public class FormHopDong extends JPanel implements ActionListener {
         FormXeMay.addFormRow(form, g, 1, "Xe máy *", cboXe);
         FormXeMay.addFormRow(form, g, 2, "Ngày thuê (yyyy-MM-dd) *", txtNgayThue);
         FormXeMay.addFormRow(form, g, 3, "Ngày trả dự kiến *", txtNgayTra);
+        FormXeMay.addFormRow(form, g, 4, "Tiền đặt cọc", txtTienCoc);
 
         dialog.add(form, BorderLayout.CENTER);
 
         dialog.add(FormXeMay.taoDialogFooter(dialog, false, () -> {
-            KhachHang kh = (KhachHang) cboKh.getSelectedItem();
-            XeMay xe = (XeMay) cboXe.getSelectedItem();
-            if (kh == null || xe == null) {
-                JOptionPane.showMessageDialog(dialog, "Chọn khách hàng và xe!");
-                return false;
-            }
-            LocalDate nThue, nTra;
             try {
-                nThue = LocalDate.parse(txtNgayThue.getText().trim());
-                nTra = LocalDate.parse(txtNgayTra.getText().trim());
-            } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(dialog, "Ngày sai định dạng yyyy-MM-dd!");
-                return false;
-            }
-            if (!nTra.isAfter(nThue)) {
-                JOptionPane.showMessageDialog(dialog, "Ngày trả phải sau ngày thuê!");
-                return false;
-            }
+                KhachHangDTO kh = (KhachHangDTO) cboKh.getSelectedItem();
+                XeMayDTO xe = (XeMayDTO) cboXe.getSelectedItem();
+                LocalDate nT = DateUtil.parse(txtNgayThue.getText());
+                LocalDate nTr = DateUtil.parse(txtNgayTra.getText());
+                long coc = Long.parseLong(txtTienCoc.getText().trim().replaceAll("[,.\\s]", ""));
 
-            try (Connection con = KetNoiCSDL.getConnection()) {
-                con.setAutoCommit(false);
-                try (PreparedStatement ps1 = con.prepareStatement(
-                        "INSERT INTO hopdong(makh, maxe, manv, ngaythue, ngaytra_dukien, trangthai) VALUES (?,?,?,?,?, 'DANG_THUE')");
-                     PreparedStatement ps2 = con.prepareStatement(
-                             "UPDATE xemay SET trangthai='DANG_THUE' WHERE id=?")) {
-                    ps1.setInt(1, kh.getId());
-                    ps1.setInt(2, xe.getId());
-                    ps1.setInt(3, nhanVien.getId());
-                    ps1.setDate(4, Date.valueOf(nThue));
-                    ps1.setDate(5, Date.valueOf(nTra));
-                    ps1.executeUpdate();
-                    ps2.setInt(1, xe.getId());
-                    ps2.executeUpdate();
-                    con.commit();
-                } catch (SQLException ex) {
-                    con.rollback();
-                    throw ex;
-                } finally {
-                    con.setAutoCommit(true);
-                }
-                napDuLieu();
+                hopDongBUS.taoHopDong(
+                        kh == null ? 0 : kh.getId(),
+                        xe == null ? 0 : xe.getId(),
+                        nhanVien.getId(), nT, nTr, coc);
+
                 JOptionPane.showMessageDialog(dialog, "Tạo hợp đồng thành công!");
+                capNhatStats();
+                taiTrang(phanTrangPanel.getCurrentPage());
                 return true;
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return false;
             }
         }), BorderLayout.SOUTH);
 
-        dialog.setSize(560, 420);
+        dialog.setSize(560, 460);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
@@ -270,8 +261,8 @@ public class FormHopDong extends JPanel implements ActionListener {
             JOptionPane.showMessageDialog(this, "Chọn hợp đồng cần trả xe!");
             return;
         }
-        if (!"DANG_THUE".equals(model.getValueAt(row, 7))) {
-            JOptionPane.showMessageDialog(this, "Hợp đồng này đã trả xe rồi!");
+        if (!TrangThaiHopDong.DANG_THUE.equals(model.getValueAt(row, 8))) {
+            JOptionPane.showMessageDialog(this, "Hợp đồng này không ở trạng thái đang thuê!");
             return;
         }
         int hopDongId = (int) model.getValueAt(row, 0);
@@ -279,73 +270,12 @@ public class FormHopDong extends JPanel implements ActionListener {
         String nhap = JOptionPane.showInputDialog(this,
                 "Nhập ngày trả thực tế (yyyy-MM-dd):", LocalDate.now().toString());
         if (nhap == null) return;
-        LocalDate ngayTraThucTe;
-        try {
-            ngayTraThucTe = LocalDate.parse(nhap.trim());
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Sai định dạng ngày!");
-            return;
-        }
 
-        try (Connection con = KetNoiCSDL.getConnection()) {
-            int maXe;
-            LocalDate ngayThue, ngayTraDuKien;
-            long giaThue;
-
-            try (PreparedStatement ps = con.prepareStatement(
-                    "SELECT h.maxe, h.ngaythue, h.ngaytra_dukien, x.giathue " +
-                    "FROM hopdong h JOIN xemay x ON h.maxe = x.id WHERE h.id = ?")) {
-                ps.setInt(1, hopDongId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) {
-                        JOptionPane.showMessageDialog(this, "Không tìm thấy hợp đồng!");
-                        return;
-                    }
-                    maXe = rs.getInt("maxe");
-                    ngayThue = rs.getDate("ngaythue").toLocalDate();
-                    ngayTraDuKien = rs.getDate("ngaytra_dukien").toLocalDate();
-                    giaThue = rs.getLong("giathue");
-                }
-            }
-
-            long tongTien = tinhTien(ngayThue, ngayTraDuKien, ngayTraThucTe, giaThue);
-
-            con.setAutoCommit(false);
-            try (PreparedStatement ps1 = con.prepareStatement(
-                    "UPDATE hopdong SET ngaytra_thucte=?, tongtien=?, trangthai='DA_TRA' WHERE id=?");
-                 PreparedStatement ps2 = con.prepareStatement(
-                         "UPDATE xemay SET trangthai='SAN_SANG' WHERE id=?")) {
-                ps1.setDate(1, Date.valueOf(ngayTraThucTe));
-                ps1.setLong(2, tongTien);
-                ps1.setInt(3, hopDongId);
-                ps1.executeUpdate();
-                ps2.setInt(1, maXe);
-                ps2.executeUpdate();
-                con.commit();
-            } catch (SQLException ex) {
-                con.rollback();
-                throw ex;
-            } finally {
-                con.setAutoCommit(true);
-            }
-
-            JOptionPane.showMessageDialog(this,
-                    String.format("Đã trả xe.\nTổng tiền: %,d VNĐ", tongTien));
-            napDuLieu();
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi trả xe: " + ex.getMessage());
-        }
-    }
-
-    private long tinhTien(LocalDate ngayThue, LocalDate ngayTraDuKien,
-                          LocalDate ngayTraThucTe, long giaThue) {
-        long soNgay = ChronoUnit.DAYS.between(ngayThue, ngayTraThucTe);
-        if (soNgay <= 0) soNgay = 1;
-        long tong = soNgay * giaThue;
-        if (ngayTraThucTe.isAfter(ngayTraDuKien)) {
-            long soNgayTre = ChronoUnit.DAYS.between(ngayTraDuKien, ngayTraThucTe);
-            tong += (long) (soNgayTre * giaThue * 1.5);
-        }
-        return tong;
+        LocalDate ngayTra = DateUtil.parse(nhap);
+        long tong = hopDongBUS.traXe(hopDongId, ngayTra);
+        JOptionPane.showMessageDialog(this,
+                String.format("Đã trả xe.\nTổng tiền: %,d VNĐ", tong));
+        capNhatStats();
+        taiTrang(phanTrangPanel.getCurrentPage());
     }
 }

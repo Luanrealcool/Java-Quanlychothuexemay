@@ -1,19 +1,19 @@
 package gui;
 
-import database.KetNoiCSDL;
-import database.KhachHang;
-import database.NhanVien;
+import bus.AuthBUS;
+import util.LoggerUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
 
 public class FormDangNhap extends JFrame implements ActionListener {
+    private final AuthBUS authBUS = new AuthBUS();
+    private final bus.KhachHangBUS khachHangBUS = new bus.KhachHangBUS();
     JTextField txtTaiKhoan;
     JPasswordField txtMatKhau;
-    JButton btnDangNhap, btnThoat;
+    JButton btnDangNhap, btnThoat, btnDangKy;
 
     public FormDangNhap() {
         super("Đăng nhập - Quản lý cho thuê xe máy");
@@ -159,13 +159,39 @@ public class FormDangNhap extends JFrame implements ActionListener {
         btnThoat.addActionListener(this);
         form.add(btnThoat);
 
-        form.add(Box.createVerticalStrut(30));
+        form.add(Box.createVerticalStrut(20));
+
+        JPanel pDangKy = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        pDangKy.setOpaque(false);
+        pDangKy.setAlignmentX(Component.LEFT_ALIGNMENT);
+        pDangKy.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        JLabel lblHoi = new JLabel("Chưa có tài khoản?");
+        lblHoi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblHoi.setForeground(new Color(108, 117, 125));
+        pDangKy.add(lblHoi);
+
+        btnDangKy = new JButton("Đăng ký ngay");
+        btnDangKy.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnDangKy.setForeground(GiaoDien.XANH_CHINH);
+        btnDangKy.setBackground(GiaoDien.TRANG);
+        btnDangKy.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+        btnDangKy.setFocusPainted(false);
+        btnDangKy.setBorderPainted(false);
+        btnDangKy.setOpaque(false);
+        btnDangKy.setContentAreaFilled(false);
+        btnDangKy.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnDangKy.addActionListener(this);
+        pDangKy.add(btnDangKy);
+
+        form.add(pDangKy);
+
+        form.add(Box.createVerticalStrut(20));
 
         JLabel lblHint = new JLabel("<html><div style='color:#6c757d;font-size:11px;line-height:1.7;'>"
                 + "<b style='color:#495057;'>TÀI KHOẢN MẪU</b><br>"
                 + "• Nhân viên: <b>admin</b> / 123456<br>"
-                + "• Khách hàng: <b>kh001</b> / 123<br>"
-                + "• Khách hàng: <b>kh002</b> / 123"
+                + "• Khách hàng: <b>kh001</b> / 123"
                 + "</div></html>");
         lblHint.setAlignmentX(Component.LEFT_ALIGNMENT);
         form.add(lblHint);
@@ -187,79 +213,115 @@ public class FormDangNhap extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnDangNhap) dangNhap();
         else if (e.getSource() == btnThoat) System.exit(0);
+        else if (e.getSource() == btnDangKy) hienDialogDangKy();
+    }
+
+    private void hienDialogDangKy() {
+        JDialog dialog = new JDialog(this, "Đăng ký tài khoản",
+                Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout());
+
+        dialog.add(FormXeMay.taoDialogHeader("Đăng ký tài khoản khách hàng", "+",
+                GiaoDien.XANH_LA), BorderLayout.NORTH);
+
+        JTextField txtCmnd = new JTextField();
+        JTextField txtHoTen = new JTextField();
+        JTextField txtSdt = new JTextField();
+        JTextField txtTdn = new JTextField();
+        JPasswordField txtMk = new JPasswordField();
+        JPasswordField txtMk2 = new JPasswordField();
+        for (JComponent c : new JComponent[]{txtCmnd, txtHoTen, txtSdt, txtTdn, txtMk, txtMk2}) {
+            GiaoDien.styleInput(c);
+        }
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(GiaoDien.TRANG);
+        form.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(7, 6, 7, 6);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.anchor = GridBagConstraints.WEST;
+
+        FormXeMay.addFormRow(form, g, 0, "CMND/CCCD *", txtCmnd);
+        FormXeMay.addFormRow(form, g, 1, "Họ tên *", txtHoTen);
+        FormXeMay.addFormRow(form, g, 2, "Số điện thoại", txtSdt);
+        FormXeMay.addFormRow(form, g, 3, "Tên đăng nhập *", txtTdn);
+        FormXeMay.addFormRow(form, g, 4, "Mật khẩu *", txtMk);
+        FormXeMay.addFormRow(form, g, 5, "Nhập lại mật khẩu *", txtMk2);
+
+        dialog.add(form, BorderLayout.CENTER);
+
+        dialog.add(FormXeMay.taoDialogFooter(dialog, false, () -> {
+            try {
+                String mk = new String(txtMk.getPassword()).trim();
+                String mk2 = new String(txtMk2.getPassword()).trim();
+                if (mk.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Mật khẩu không được trống!");
+                    return false;
+                }
+                if (!mk.equals(mk2)) {
+                    JOptionPane.showMessageDialog(dialog, "Mật khẩu nhập lại không khớp!");
+                    return false;
+                }
+                if (txtTdn.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Tên đăng nhập không được trống!");
+                    return false;
+                }
+
+                dto.KhachHangDTO kh = new dto.KhachHangDTO();
+                kh.setCmnd(txtCmnd.getText().trim());
+                kh.setHoTen(txtHoTen.getText().trim());
+                kh.setSdt(txtSdt.getText().trim());
+                kh.setTenDangNhap(txtTdn.getText().trim());
+
+                khachHangBUS.them(kh, mk);
+
+                JOptionPane.showMessageDialog(dialog,
+                        "Đăng ký thành công!\nTên đăng nhập: " + kh.getTenDangNhap()
+                                + "\nMời bạn đăng nhập để tiếp tục.",
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                txtTaiKhoan.setText(kh.getTenDangNhap());
+                txtMatKhau.requestFocus();
+                return true;
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(dialog, ex.getMessage(),
+                        "Lỗi", JOptionPane.WARNING_MESSAGE);
+                return false;
+            } catch (Exception ex) {
+                LoggerUtil.error("Lỗi đăng ký", ex);
+                JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
+                return false;
+            }
+        }), BorderLayout.SOUTH);
+
+        dialog.setSize(520, 560);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private void dangNhap() {
         String taiKhoan = txtTaiKhoan.getText().trim();
         String matKhau = new String(txtMatKhau.getPassword());
 
-        if (taiKhoan.isEmpty() || matKhau.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nhập đủ tên đăng nhập và mật khẩu!");
-            return;
-        }
-
-        try (Connection con = KetNoiCSDL.getConnection()) {
-            NhanVien nv = timNhanVien(con, taiKhoan, matKhau);
-            if (nv != null) {
-                new FormChinh(nv).setVisible(true);
+        try {
+            AuthBUS.KetQuaDangNhap kq = authBUS.dangNhap(taiKhoan, matKhau);
+            if (kq.laNhanVien()) {
+                LoggerUtil.info("Nhân viên đăng nhập: " + kq.nhanVien.getTenDangNhap());
+                new FormChinh(kq.nhanVien).setVisible(true);
                 dispose();
-                return;
-            }
-
-            KhachHang kh = timKhachHang(con, taiKhoan, matKhau);
-            if (kh != null) {
-                new FormChinhKhach(kh).setVisible(true);
+            } else if (kq.laKhachHang()) {
+                LoggerUtil.info("Khách đăng nhập: " + kq.khachHang.getTenDangNhap());
+                new FormChinhKhach(kq.khachHang).setVisible(true);
                 dispose();
-                return;
             }
-
-            JOptionPane.showMessageDialog(this,
-                    "Sai tên đăng nhập hoặc mật khẩu!",
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (RuntimeException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtMatKhau.setText("");
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
+            LoggerUtil.error("Lỗi đăng nhập", ex);
             JOptionPane.showMessageDialog(this,
-                    "Lỗi kết nối CSDL: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    "Lỗi hệ thống: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private NhanVien timNhanVien(Connection con, String taiKhoan, String matKhau) throws SQLException {
-        String sql = "SELECT id, tendangnhap, hoten FROM nhanvien WHERE tendangnhap=? AND matkhau=?";
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, taiKhoan);
-            ps.setString(2, matKhau);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return new NhanVien(rs.getInt("id"),
-                            rs.getString("tendangnhap"),
-                            rs.getString("hoten"));
-                }
-            }
-        }
-        return null;
-    }
-
-    private KhachHang timKhachHang(Connection con, String taiKhoan, String matKhau) throws SQLException {
-        String sql = "SELECT id, cmnd, hoten, sdt, diachi, tendangnhap " +
-                "FROM khachhang WHERE tendangnhap=? AND matkhau=?";
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, taiKhoan);
-            ps.setString(2, matKhau);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    KhachHang kh = new KhachHang(
-                            rs.getInt("id"),
-                            rs.getString("cmnd"),
-                            rs.getString("hoten"),
-                            rs.getString("sdt"),
-                            rs.getString("diachi")
-                    );
-                    kh.setTenDangNhap(rs.getString("tendangnhap"));
-                    return kh;
-                }
-            }
-        }
-        return null;
     }
 }
