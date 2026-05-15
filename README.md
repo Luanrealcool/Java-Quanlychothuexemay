@@ -65,12 +65,13 @@ QuanLyChoThueXeMay/
 
 ## 📖 Đọc tài liệu theo thứ tự
 
+0. ⭐ [`docs/00-PLAN-CHI-TIET.md`](docs/00-PLAN-CHI-TIET.md) — **KIẾN TRÚC MULTI-LAYER MỚI** (đọc trước tiên)
 1. [`docs/04-SETUP.md`](docs/04-SETUP.md) — cài MySQL, tải driver, mở project
 2. [`docs/PROGRESS.md`](docs/PROGRESS.md) — checklist tiến độ, tick khi xong
-3. [`docs/01-DATABASE.md`](docs/01-DATABASE.md) — thiết kế bảng + dữ liệu mẫu
-4. [`docs/03-LOGIC.md`](docs/03-LOGIC.md) — class dữ liệu + cách viết SQL
-5. [`docs/02-GUI.md`](docs/02-GUI.md) — bố cục các Form Swing
-6. [`docs/05-TAI-KHOAN-KHACH-HANG.md`](docs/05-TAI-KHOAN-KHACH-HANG.md) — *(tuỳ chọn)* Mở rộng cho khách đăng nhập tự đặt thuê
+3. [`docs/01-DATABASE.md`](docs/01-DATABASE.md) — thiết kế bảng + dữ liệu mẫu (v1 cơ bản)
+4. [`docs/03-LOGIC.md`](docs/03-LOGIC.md) — class dữ liệu + cách viết SQL (v1)
+5. [`docs/02-GUI.md`](docs/02-GUI.md) — bố cục các Form Swing (v1)
+6. [`docs/05-TAI-KHOAN-KHACH-HANG.md`](docs/05-TAI-KHOAN-KHACH-HANG.md) — Đăng nhập khách hàng (đã làm)
 
 ## 🚀 Thứ tự làm
 

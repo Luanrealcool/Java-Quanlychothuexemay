@@ -5,36 +5,50 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="61e44d1e-226b-4c4c-9863-df2ca22e937f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/docs/05-TAI-KHOAN-KHACH-HANG.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/gui/FormChinhKhach.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/gui/FormHopDongCuaToi$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/gui/FormHopDongCuaToi.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/gui/FormThueXeKhach$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/gui/FormThueXeKhach.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormChinhKhach.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDongCuaToi$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDongCuaToi.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThueXeKhach$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThueXeKhach.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/FormChinhKhach.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/FormHopDongCuaToi.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/gui/FormThueXeKhach.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.local.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/database/KhachHang.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/database/KhachHang.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormChinh.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormChinh.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormChinhKhach.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormChinhKhach.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/gui/FormDangNhap.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormDangNhap.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormHopDong$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormHopDong$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormHopDong.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormHopDong.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormHopDongCuaToi$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormHopDongCuaToi$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormHopDongCuaToi.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormHopDongCuaToi.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/gui/FormKhachHang$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormKhachHang$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/gui/FormKhachHang.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormKhachHang.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/database/KhachHang.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/database/KhachHang.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/database/quanlychothuexe.sql" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/database/quanlychothuexe.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormThongKe$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormThongKe$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormThongKe.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormThongKe.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormThueXeKhach$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormThueXeKhach$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormThueXeKhach.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormThueXeKhach.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormXeMay$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormXeMay$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/gui/FormXeMay.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/gui/FormXeMay.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormChinh.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormChinh.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormChinhKhach.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormChinhKhach.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormDangNhap.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormDangNhap.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDong$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDong$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDong.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDong.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDongCuaToi$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDongCuaToi$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDongCuaToi.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormHopDongCuaToi.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormKhachHang$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormKhachHang$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormKhachHang.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormKhachHang.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/KhachHang.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/KhachHang.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/quanlychothuexe.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/quanlychothuexe.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThongKe$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThongKe$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThongKe.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThongKe.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThueXeKhach$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThueXeKhach$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThueXeKhach.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormThueXeKhach.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormXeMay$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormXeMay$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormXeMay.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/QuanLychothuexe/gui/FormXeMay.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormChinh.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormChinh.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormChinhKhach.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormChinhKhach.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/FormDangNhap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormDangNhap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormHopDong.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormHopDong.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormHopDongCuaToi.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormHopDongCuaToi.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/FormKhachHang.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormKhachHang.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormThongKe.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormThongKe.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormThueXeKhach.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormThueXeKhach.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gui/FormXeMay.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/FormXeMay.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,6 +93,11 @@
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Java\QuanLychothuexe\lib" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

@@ -10,161 +10,314 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 
 public class FormXeMay extends JPanel implements ActionListener {
-    JTextField txtBienSo, txtHangXe, txtModel, txtGia, txtTimKiem;
-    JComboBox<String> cboTrangThai;
-    JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTim;
+    JTextField txtTimKiem;
+    JButton btnThem, btnSua, btnXoa, btnTim;
     DefaultTableModel model;
     JTable bang;
+    JLabel lblStatTong, lblStatSanSang, lblStatDangThue, lblStatBaoTri;
 
     public FormXeMay() {
-        setLayout(new BorderLayout(5, 5));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        setLayout(new BorderLayout());
+        setBackground(GiaoDien.XAM_NHAT);
+        setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
         GUI();
         napDuLieu();
     }
 
     public void GUI() {
-        JPanel pForm = new JPanel(new GridLayout(3, 4, 8, 6));
-        pForm.setBorder(BorderFactory.createTitledBorder("Thông tin xe máy"));
+        JPanel top = new JPanel();
+        top.setOpaque(false);
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
 
-        pForm.add(new JLabel("Biển số:"));
-        txtBienSo = new JTextField();
-        pForm.add(txtBienSo);
+        top.add(GiaoDien.taoPageHeader("Quản lý xe máy",
+                "Danh sách xe máy có trong hệ thống"));
+        top.add(Box.createVerticalStrut(16));
+        top.add(taoStatsRow());
+        top.add(Box.createVerticalStrut(16));
+        top.add(taoToolbar());
+        top.add(Box.createVerticalStrut(10));
 
-        pForm.add(new JLabel("Hãng xe:"));
-        txtHangXe = new JTextField();
-        pForm.add(txtHangXe);
+        add(top, BorderLayout.NORTH);
+        add(taoTableCard(), BorderLayout.CENTER);
+    }
 
-        pForm.add(new JLabel("Model:"));
-        txtModel = new JTextField();
-        pForm.add(txtModel);
+    private JPanel taoStatsRow() {
+        JPanel p = new JPanel(new GridLayout(1, 4, 14, 0));
+        p.setOpaque(false);
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        pForm.add(new JLabel("Giá thuê (VNĐ/ngày):"));
-        txtGia = new JTextField();
-        pForm.add(txtGia);
+        lblStatTong = new JLabel("0");
+        lblStatSanSang = new JLabel("0");
+        lblStatDangThue = new JLabel("0");
+        lblStatBaoTri = new JLabel("0");
 
-        pForm.add(new JLabel("Trạng thái:"));
-        cboTrangThai = new JComboBox<>(new String[]{"SAN_SANG", "DANG_THUE", "BAO_TRI"});
-        pForm.add(cboTrangThai);
+        p.add(GiaoDien.taoStatCard("TỔNG XE", lblStatTong, GiaoDien.XANH_CHINH, "🏍"));
+        p.add(GiaoDien.taoStatCard("SẴN SÀNG", lblStatSanSang, GiaoDien.XANH_LA, "✓"));
+        p.add(GiaoDien.taoStatCard("ĐANG THUÊ", lblStatDangThue, GiaoDien.CAM, "⏱"));
+        p.add(GiaoDien.taoStatCard("BẢO TRÌ", lblStatBaoTri, GiaoDien.DO, "🔧"));
+        return p;
+    }
 
-        add(pForm, BorderLayout.NORTH);
+    private JPanel taoToolbar() {
+        JPanel toolbar = new JPanel(new BorderLayout());
+        toolbar.setOpaque(false);
+        toolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        toolbar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+
+        JPanel pTim = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        pTim.setOpaque(false);
+        JLabel lblTim = new JLabel("🔍");
+        lblTim.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+        pTim.add(lblTim);
+        txtTimKiem = new JTextField(22);
+        GiaoDien.styleInput(txtTimKiem);
+        pTim.add(txtTimKiem);
+        btnTim = new JButton("Tìm");
+        GiaoDien.styleNut(btnTim, GiaoDien.TIM);
+        pTim.add(btnTim);
+        toolbar.add(pTim, BorderLayout.WEST);
+
+        JPanel pAct = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        pAct.setOpaque(false);
+        btnThem = new JButton("+ Thêm xe");
+        btnSua = new JButton("✎ Sửa");
+        btnXoa = new JButton("✕ Xoá");
+        GiaoDien.styleNut(btnThem, GiaoDien.XANH_LA);
+        GiaoDien.styleNut(btnSua, GiaoDien.XANH_CHINH);
+        GiaoDien.styleNut(btnXoa, GiaoDien.DO);
+        pAct.add(btnThem);
+        pAct.add(btnSua);
+        pAct.add(btnXoa);
+        toolbar.add(pAct, BorderLayout.EAST);
+
+        btnThem.addActionListener(this);
+        btnSua.addActionListener(this);
+        btnXoa.addActionListener(this);
+        btnTim.addActionListener(this);
+        return toolbar;
+    }
+
+    private JPanel taoTableCard() {
+        JPanel card = GiaoDien.taoCard();
+        card.add(GiaoDien.taoCardHeader("DANH SÁCH XE MÁY"), BorderLayout.NORTH);
 
         String[] cot = {"ID", "Biển số", "Hãng", "Model", "Giá thuê", "Trạng thái"};
         model = new DefaultTableModel(cot, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         bang = new JTable(model);
-        bang.getSelectionModel().addListSelectionListener(e -> chonDong());
-        add(new JScrollPane(bang), BorderLayout.CENTER);
+        GiaoDien.styleBang(bang);
+        GiaoDien.setRenderer(bang, 4, GiaoDien.rendererTien());
+        GiaoDien.setRenderer(bang, 5, GiaoDien.rendererTrangThai());
 
-        btnThem = new JButton("Thêm");
-        btnSua = new JButton("Sửa");
-        btnXoa = new JButton("Xoá");
-        btnLamMoi = new JButton("Làm mới");
-        btnTim = new JButton("Tìm");
-        txtTimKiem = new JTextField(15);
-
-        JPanel pNut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        pNut.add(btnThem);
-        pNut.add(btnSua);
-        pNut.add(btnXoa);
-        pNut.add(btnLamMoi);
-        pNut.add(new JLabel("       Tìm kiếm:"));
-        pNut.add(txtTimKiem);
-        pNut.add(btnTim);
-        add(pNut, BorderLayout.SOUTH);
-
-        btnThem.addActionListener(this);
-        btnSua.addActionListener(this);
-        btnXoa.addActionListener(this);
-        btnLamMoi.addActionListener(this);
-        btnTim.addActionListener(this);
+        JScrollPane scroll = new JScrollPane(bang);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(GiaoDien.TRANG);
+        card.add(scroll, BorderLayout.CENTER);
+        return card;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == btnThem) them();
-        else if (e.getSource() == btnSua) sua();
+        if (e.getSource() == btnThem) hienDialog(false);
+        else if (e.getSource() == btnSua) hienDialog(true);
         else if (e.getSource() == btnXoa) xoa();
-        else if (e.getSource() == btnLamMoi) {
-            xoaForm();
-            txtTimKiem.setText("");
-            napDuLieu();
-        }
         else if (e.getSource() == btnTim) tim();
     }
 
     private void napDuLieu() {
         model.setRowCount(0);
+        int tong = 0, ss = 0, dt = 0, bt = 0;
         String sql = "SELECT * FROM xemay ORDER BY id";
         try (Connection con = KetNoiCSDL.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
+                String tt = rs.getString("trangthai");
+                tong++;
+                if ("SAN_SANG".equals(tt)) ss++;
+                else if ("DANG_THUE".equals(tt)) dt++;
+                else if ("BAO_TRI".equals(tt)) bt++;
                 model.addRow(new Object[]{
                         rs.getInt("id"),
                         rs.getString("bienso"),
                         rs.getString("hangxe"),
                         rs.getString("model"),
                         rs.getLong("giathue"),
-                        rs.getString("trangthai")
+                        tt
                 });
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Lỗi tải xe: " + ex.getMessage());
         }
+        lblStatTong.setText(String.valueOf(tong));
+        lblStatSanSang.setText(String.valueOf(ss));
+        lblStatDangThue.setText(String.valueOf(dt));
+        lblStatBaoTri.setText(String.valueOf(bt));
     }
 
-    private void chonDong() {
-        int row = bang.getSelectedRow();
-        if (row < 0) return;
-        txtBienSo.setText(model.getValueAt(row, 1).toString());
-        txtHangXe.setText(model.getValueAt(row, 2).toString());
-        txtModel.setText(model.getValueAt(row, 3).toString());
-        txtGia.setText(model.getValueAt(row, 4).toString());
-        cboTrangThai.setSelectedItem(model.getValueAt(row, 5).toString());
+    private void hienDialog(boolean laEdit) {
+        int row = -1;
+        if (laEdit) {
+            row = bang.getSelectedRow();
+            if (row < 0) {
+                JOptionPane.showMessageDialog(this, "Chọn dòng cần sửa!");
+                return;
+            }
+        }
+
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this),
+                laEdit ? "Sửa xe máy" : "Thêm xe máy",
+                Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout());
+
+        Color headerColor = laEdit ? GiaoDien.XANH_CHINH : GiaoDien.XANH_LA;
+        dialog.add(taoDialogHeader(laEdit ? "Sửa thông tin xe" : "Thêm xe máy mới",
+                laEdit ? "✎" : "+", headerColor), BorderLayout.NORTH);
+
+        JTextField txtBs = new JTextField();
+        JTextField txtHang = new JTextField();
+        JTextField txtModel = new JTextField();
+        JTextField txtGia = new JTextField();
+        JComboBox<String> cboTt = new JComboBox<>(new String[]{"SAN_SANG", "DANG_THUE", "BAO_TRI"});
+        GiaoDien.styleInput(txtBs);
+        GiaoDien.styleInput(txtHang);
+        GiaoDien.styleInput(txtModel);
+        GiaoDien.styleInput(txtGia);
+        GiaoDien.styleInput(cboTt);
+
+        if (laEdit) {
+            txtBs.setText(model.getValueAt(row, 1).toString());
+            txtHang.setText(model.getValueAt(row, 2).toString());
+            txtModel.setText(model.getValueAt(row, 3).toString());
+            txtGia.setText(model.getValueAt(row, 4).toString());
+            cboTt.setSelectedItem(model.getValueAt(row, 5).toString());
+        }
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(GiaoDien.TRANG);
+        form.setBorder(BorderFactory.createEmptyBorder(25, 30, 25, 30));
+
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(8, 6, 8, 6);
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.anchor = GridBagConstraints.WEST;
+
+        addFormRow(form, g, 0, "Biển số *", txtBs);
+        addFormRow(form, g, 1, "Hãng xe *", txtHang);
+        addFormRow(form, g, 2, "Model", txtModel);
+        addFormRow(form, g, 3, "Giá thuê (VNĐ/ngày) *", txtGia);
+        addFormRow(form, g, 4, "Trạng thái", cboTt);
+
+        dialog.add(form, BorderLayout.CENTER);
+
+        final int finalRow = row;
+        dialog.add(taoDialogFooter(dialog, laEdit, () -> {
+            if (txtBs.getText().trim().isEmpty() || txtHang.getText().trim().isEmpty()
+                    || txtGia.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Nhập đủ biển số, hãng và giá thuê!");
+                return false;
+            }
+            long gia;
+            try { gia = Long.parseLong(txtGia.getText().trim()); }
+            catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Giá thuê phải là số!");
+                return false;
+            }
+            try (Connection con = KetNoiCSDL.getConnection()) {
+                if (laEdit) {
+                    int id = (int) model.getValueAt(finalRow, 0);
+                    try (PreparedStatement ps = con.prepareStatement(
+                            "UPDATE xemay SET bienso=?, hangxe=?, model=?, giathue=?, trangthai=? WHERE id=?")) {
+                        ps.setString(1, txtBs.getText().trim());
+                        ps.setString(2, txtHang.getText().trim());
+                        ps.setString(3, txtModel.getText().trim());
+                        ps.setLong(4, gia);
+                        ps.setString(5, (String) cboTt.getSelectedItem());
+                        ps.setInt(6, id);
+                        ps.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement ps = con.prepareStatement(
+                            "INSERT INTO xemay(bienso, hangxe, model, giathue, trangthai) VALUES (?,?,?,?,?)")) {
+                        ps.setString(1, txtBs.getText().trim());
+                        ps.setString(2, txtHang.getText().trim());
+                        ps.setString(3, txtModel.getText().trim());
+                        ps.setLong(4, gia);
+                        ps.setString(5, (String) cboTt.getSelectedItem());
+                        ps.executeUpdate();
+                    }
+                }
+                napDuLieu();
+                return true;
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
+                return false;
+            }
+        }), BorderLayout.SOUTH);
+
+        dialog.setSize(520, 460);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
-    private void them() {
-        if (!kiemTraForm()) return;
-        String sql = "INSERT INTO xemay(bienso, hangxe, model, giathue, trangthai) VALUES (?,?,?,?,?)";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, txtBienSo.getText().trim());
-            ps.setString(2, txtHangXe.getText().trim());
-            ps.setString(3, txtModel.getText().trim());
-            ps.setLong(4, Long.parseLong(txtGia.getText().trim()));
-            ps.setString(5, (String) cboTrangThai.getSelectedItem());
-            ps.executeUpdate();
-            xoaForm();
-            napDuLieu();
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi thêm xe: " + ex.getMessage());
-        }
+    static void addFormRow(JPanel form, GridBagConstraints g, int row, String label, JComponent comp) {
+        g.gridx = 0; g.gridy = row; g.weightx = 0;
+        form.add(GiaoDien.taoLabel(label), g);
+        g.gridx = 1; g.weightx = 1;
+        form.add(comp, g);
     }
 
-    private void sua() {
-        int row = bang.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Chọn dòng cần sửa!");
-            return;
-        }
-        if (!kiemTraForm()) return;
-        int id = (int) model.getValueAt(row, 0);
-        String sql = "UPDATE xemay SET bienso=?, hangxe=?, model=?, giathue=?, trangthai=? WHERE id=?";
-        try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, txtBienSo.getText().trim());
-            ps.setString(2, txtHangXe.getText().trim());
-            ps.setString(3, txtModel.getText().trim());
-            ps.setLong(4, Long.parseLong(txtGia.getText().trim()));
-            ps.setString(5, (String) cboTrangThai.getSelectedItem());
-            ps.setInt(6, id);
-            ps.executeUpdate();
-            napDuLieu();
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi sửa xe: " + ex.getMessage());
-        }
+    static JPanel taoDialogHeader(String title, String icon, Color color) {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(color);
+        header.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
+        JLabel lblIcon = new JLabel(icon);
+        lblIcon.setFont(new Font("Segoe UI Emoji", Font.BOLD, 22));
+        lblIcon.setForeground(Color.WHITE);
+        JLabel lblTitle = new JLabel("  " + title);
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setForeground(Color.WHITE);
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        left.setOpaque(false);
+        left.add(lblIcon);
+        left.add(lblTitle);
+        header.add(left, BorderLayout.WEST);
+        return header;
+    }
+
+    interface LuuAction {
+        boolean luu();
+    }
+
+    static JPanel taoDialogFooter(JDialog dialog, boolean laEdit, LuuAction action) {
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 12));
+        footer.setBackground(GiaoDien.XAM_NHAT);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, GiaoDien.VIEN));
+
+        JButton btnHuy = new JButton("Huỷ");
+        btnHuy.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnHuy.setBackground(GiaoDien.TRANG);
+        btnHuy.setForeground(GiaoDien.XAM_DAM);
+        btnHuy.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GiaoDien.VIEN_INPUT),
+                BorderFactory.createEmptyBorder(8, 18, 8, 18)));
+        btnHuy.setFocusPainted(false);
+        btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JButton btnLuu = new JButton(laEdit ? "✓ Lưu thay đổi" : "+ Thêm");
+        GiaoDien.styleNut(btnLuu, laEdit ? GiaoDien.XANH_CHINH : GiaoDien.XANH_LA);
+
+        footer.add(btnHuy);
+        footer.add(btnLuu);
+
+        btnHuy.addActionListener(e -> dialog.dispose());
+        btnLuu.addActionListener(e -> {
+            if (action.luu()) dialog.dispose();
+        });
+        dialog.getRootPane().setDefaultButton(btnLuu);
+        return footer;
     }
 
     private void xoa() {
@@ -173,17 +326,17 @@ public class FormXeMay extends JPanel implements ActionListener {
             JOptionPane.showMessageDialog(this, "Chọn dòng cần xoá!");
             return;
         }
-        int chon = JOptionPane.showConfirmDialog(this, "Xác nhận xoá xe này?",
-                "Xoá", JOptionPane.YES_NO_OPTION);
+        String bienSo = model.getValueAt(row, 1).toString();
+        int chon = JOptionPane.showConfirmDialog(this,
+                "Xác nhận xoá xe \"" + bienSo + "\"?",
+                "Xoá xe máy", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (chon != JOptionPane.YES_OPTION) return;
 
         int id = (int) model.getValueAt(row, 0);
-        String sql = "DELETE FROM xemay WHERE id=?";
         try (Connection con = KetNoiCSDL.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps = con.prepareStatement("DELETE FROM xemay WHERE id=?")) {
             ps.setInt(1, id);
             ps.executeUpdate();
-            xoaForm();
             napDuLieu();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
@@ -217,30 +370,5 @@ public class FormXeMay extends JPanel implements ActionListener {
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Lỗi tìm: " + ex.getMessage());
         }
-    }
-
-    private boolean kiemTraForm() {
-        if (txtBienSo.getText().trim().isEmpty()
-                || txtHangXe.getText().trim().isEmpty()
-                || txtGia.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nhập đủ biển số, hãng và giá thuê!");
-            return false;
-        }
-        try {
-            Long.parseLong(txtGia.getText().trim());
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Giá thuê phải là số!");
-            return false;
-        }
-        return true;
-    }
-
-    private void xoaForm() {
-        txtBienSo.setText("");
-        txtHangXe.setText("");
-        txtModel.setText("");
-        txtGia.setText("");
-        cboTrangThai.setSelectedIndex(0);
-        bang.clearSelection();
     }
 }
